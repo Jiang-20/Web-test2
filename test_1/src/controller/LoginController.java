@@ -8,6 +8,7 @@ import javax.jws.WebService;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,29 +30,36 @@ request.setCharacterEncoding("utf-8");
 		String userName = request.getParameter("userName");
 		String password = request.getParameter("password");
 		String vcode= request.getParameter("vcode");
+		String autoLogin = request.getParameter("autoLogin");
 		
 		HttpSession session = request.getSession();
 		
 		String saveVcode = (String) session.getAttribute("verifyCode");
 		String forwardPath = "";
-		//±È½ÏÊäÈëµÄÑéÖ¤ÂëºÍÉú³ÉµÄÑéÖ¤ÂëÊÇ·ñÒ»Ñù
+		//æ¯”è¾ƒè¾“å…¥çš„éªŒè¯ç å’Œç”Ÿæˆçš„éªŒè¯ç æ˜¯å¦ä¸€æ ·
 		if(!vcode.equalsIgnoreCase(saveVcode)){
-			request.setAttribute("info", "ÑéÖ¤Âë²»ÕıÈ·£¡");
+			request.setAttribute("info", "éªŒè¯ç ä¸æ­£ç¡®ï¼");
 			forwardPath = "/error.jsp";
 		}
-		else{//ÑéÖ¤ÂëÕıÈ·
+		else{//éªŒè¯ç æ­£ç¡®
 			UserDao userDao = new UserDao();
 			User user = userDao.get(userName);
-			if(user==null){//ÓÃ»§Ãû²»´æÔÚ£¡
-				request.setAttribute("info", "ÄãÊäÈëµÄÓÃ»§Ãû²»´æÔÚ£¡");
+			if(user==null){//ç”¨æˆ·åä¸å­˜åœ¨ï¼
+				request.setAttribute("info", "ä½ è¾“å…¥çš„ç”¨æˆ·åä¸å­˜åœ¨ï¼");
 				forwardPath="error.jsp";
 			}
 			else{
 				if(!user.getPassword().equals(password)){
-					request.setAttribute("info", "ÄãÊäÈëµÄÃÜÂë²»ÕıÈ·£¡");
+					request.setAttribute("info", "ä½ è¾“å…¥çš„å¯†ç ä¸æ­£ç¡®ï¼");
 					forwardPath="error.jsp";
 				}
 				else{
+					if("on".equalsIgnoreCase(autoLogin)){
+						Cookie cookie=new Cookie("username",userName);
+						cookie.setPath("/");
+						cookie.setMaxAge(60*60*24*7);
+						response.addCookie(cookie);
+					}
 					session.setAttribute("currentUser", user);
 					forwardPath="/main.jsp";
 				}
