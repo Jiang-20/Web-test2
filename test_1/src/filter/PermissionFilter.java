@@ -8,13 +8,16 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import vo.User;
+
 public class PermissionFilter implements Filter {
 	
-	private String notCheckPath;//²»ĞèÒª¹ıÂË¶îÇëÇóµØÖ·£¬´Óweb.xmlÎÄ¼şÖĞ¶ÁÈ¡
+	private String notCheckPath;//ä¸éœ€è¦è¿‡æ»¤é¢è¯·æ±‚åœ°å€ï¼Œä»web.xmlæ–‡ä»¶ä¸­è¯»å–
 	
 	
 
@@ -30,20 +33,47 @@ public class PermissionFilter implements Filter {
 		// TODO Auto-generated method stub
 		HttpServletRequest request = (HttpServletRequest) req;
 		String path = request.getServletPath();
-		System.out.println("ÇëÇóµØÖ·url-pattern:"+path);
+		System.out.println("è¯·æ±‚åœ°å€url-pattern:"+path);
 		if(notCheckPath.indexOf(path) == -1){
 			HttpSession session = request.getSession();
 			if(session.getAttribute("currentUse") == null){
-				request.setAttribute("info", "Ã»ÓĞÈ¨ÏŞ·ÃÎÊ");
+				request.setAttribute("info", "æ²¡æœ‰æƒé™è®¿é—®");
 				request.getRequestDispatcher("/error.jsp").forward(request, 
 						resp);
 				
 			}
-			else {//ÒÑ¾­µÇÂ¼£¬Ö±½Ó·ÅĞĞ
+			else {//å·²ç»ç™»å½•ï¼Œç›´æ¥æ”¾è¡Œ
+				
+				String value=null;
+				Boolean flag=false;
+				Cookie[] cookie=request.getCookies();
+				for(Cookie a:cookie){
+					if(a.getName().equals("username")){
+						flag=true;
+						value=a.getValue();
+						break;
+					}
+				}
+				System.out.println(value);
+				if(flag){
+					
+					User user=null;
+					try {
+						//user=dao.getUser(value);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println(user);
+					session.removeAttribute("currentUser");
+					String chr=user.getChrName();
+					session.setAttribute("currentUser", chr);
+				}
+				
 				chain.doFilter(req, resp);
 			}
 		}
-		else{//µØÖ·²»ĞèÒª¹ıÂËµÄ£¬Ö±½Ó·ÅĞĞ
+		else{//åœ°å€ä¸éœ€è¦è¿‡æ»¤çš„ï¼Œç›´æ¥æ”¾è¡Œ
 			chain.doFilter(req, resp);
 		}
 		
@@ -53,7 +83,7 @@ public class PermissionFilter implements Filter {
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		// ´Óweb.xmlÅäÖÃÎÄ¼şÖĞµÄfilterÖĞ¶ÁÈ¡ÃûÎªnotCheckPathµÄ³õÊ¼Öµ
+		// ä»web.xmlé…ç½®æ–‡ä»¶ä¸­çš„filterä¸­è¯»å–åä¸ºnotCheckPathçš„åˆå§‹å€¼
 		notCheckPath = config.getInitParameter("notCheckPath");
 
 	}
